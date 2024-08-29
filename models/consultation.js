@@ -2,6 +2,11 @@ const mongoose = require('mongoose')
 
 const consultationSchema = new mongoose.Schema({
 
+    scheduled_date: {
+        type: String,
+        required: true
+    },
+    
     scheduled_time: {
         type: String,
         required: true

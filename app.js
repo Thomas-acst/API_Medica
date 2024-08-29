@@ -1,6 +1,6 @@
 const express = require('express')
 const cookieParser = require('cookie-parser')
-const assistentRoutes = require('./routes/assistente.js')
+const assistantRoutes = require('./routes/assistant.js')
 const pacientRoutes = require('./routes/pacient.js')
 const doctorRoutes = require('./routes/doctor.js')
 const app = express()
@@ -12,7 +12,7 @@ app.use(express.json())
 app.use(cookieParser());
 
 
-app.use('/assistent', assistentRoutes)
+app.use('/assistant', assistantRoutes)
 app.use('/pacient', pacientRoutes)
 app.use('/doctor', doctorRoutes)
 

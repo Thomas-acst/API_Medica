@@ -25,7 +25,7 @@ const doctorSchema = new mongoose.Schema({
         required: true
     },
     phone_number: {
-        type: Number,
+        type: String,
         required: true,
         unique: true
     },

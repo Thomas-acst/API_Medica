@@ -4,7 +4,7 @@ const express = require('express')
 
 const router = express.Router()
 require('dotenv').config()
-const { verifyToken } = require('../middleware/auth.js')
+const { verifyToken, verifyPacient, verifyPhone, verifyPassword } = require('../middleware/auth.js')
 
 const cookieParser = require('cookie-parser')
 const Pacient = require('../models/pacient.js')
@@ -14,24 +14,25 @@ const secret = process.env.JWT_TOKEN
 
 
 
-router.post('/register', async (req, res) => {
-    const { name, email, password, phone, age } = req.body
+router.post('/register', verifyPhone, verifyPassword, async (req, res) => {
+    const { name, email, password, phone_number, age } = req.body
 
-    if (!name || !email || !password || !phone || !age) {
+    if (!name || !email || !password || !phone_number || !age) {
         return res.status(422).json({ error: 'Você não preencheu as credenciais corretamente!' })
     }
     const user = await Pacient.findOne({ email })
+    const phone_exists = await Pacient.findOne({phone_number})
 
     if (user) {
         return res.status(409).json({ error: 'Este usuário já existe!' })
     }
 
-    if (password.trim().length < 8) {
-        return res.status(422).json({ error: 'Não é permitido senha menor que 8 caracteres!' })
+    if(phone_exists){
+        return res.status(409).json({ error: 'Este número já existe!' })
     }
 
     try {
-        const newUser = await new Pacient({ name, email, password, phone, age })
+        const newUser = await new Pacient({ name, email, password, phone_number, age })
         await newUser.save()
         return res.status(201).json({ message: 'Seu perfil foi criado com sucesso!' })
 
@@ -77,7 +78,7 @@ router.post('/login', async (req, res) => {
 
 
 
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', verifyToken, verifyPacient,  async (req, res) => {
     const id = req.userID
     const user = await Pacient.findOne({ _id: id })
 
@@ -90,7 +91,7 @@ router.get('/', verifyToken, async (req, res) => {
 })
 
 
-router.patch('/', verifyToken, async (req, res) => {
+router.patch('/', verifyToken, verifyPacient,  async (req, res) => {
     try {
         const { id, ...info } = req.body 
 
@@ -120,7 +121,7 @@ router.patch('/', verifyToken, async (req, res) => {
 })
 
 
-router.delete('/logout', verifyToken, async (req, res) => {
+router.delete('/logout', verifyToken, verifyPacient, async (req, res) => {
     try {
         const cookie = req.cookies.cookieAuth
 

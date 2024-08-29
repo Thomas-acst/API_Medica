@@ -1,5 +1,5 @@
 const express = require('express')
-const { verifyToken, verifyDoctor } = require('../middleware/auth')
+const { verifyToken, verifyDoctor, verifyPhone, verifyPassword } = require('../middleware/auth')
 const router = express.Router()
 
 const Doctor = require('../models/doctor')

@@ -9,7 +9,7 @@ Este será um projeto pessoal para estudo de API's simulando um sistema de hospi
 - Cadastrar pacientes                                       (FEITO)
 - Cadastrar médicos                                         (FEITO)
                                   
-- Cadastrar/remover/alterar/visualizar consultas médicas    (FEITO) **FAZER ALGUMA VALIDAÇÃO DE CONSULTAS NA MESMA HORA**
+- Cadastrar/remover/alterar/visualizar consultas médicas    (FEITO) 
 - Enviar notificação de consulta ao paciente                
 - Logout                                                    (FEITO)          
 
@@ -32,16 +32,15 @@ Este será um projeto pessoal para estudo de API's simulando um sistema de hospi
 
 # FAZER AS SEGUINTES MUDANÇAS:
 
-- **FAZER VALIDAÇÃO DE NÚMERO**
-- **FAZER MIDDLEWEARE PARA CONFERIR ROLE**
 - **FAZER MIDDLEWARE DE EMAIL PARA CONFERIR SE EXISTE OU NÃO**
 - **FAZER MIDDLEWARE DE SENHA PARA CONFERIR SE ESTÁ CORRETA OU NÃO**
 - **SISTEMA DE RECUPERAÇÃO DE SENHA??**
-- **FAZER UM USERROLE**
 - **COLOCAR NO AUTH A VALIDAÇÃO DE SENHA EM QUESTÃO DE CARACTERES**
 - **FAZER CACHE?**
 - **COLOCAR HATOES?**
 
+
+**PORQUÊ --> module.exports = mongoose.model('Assistant', assistantSchema)**
 
 
 

@@ -15,8 +15,9 @@ const pacientSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    phone: {
-        type: Number,
+    phone_number: {
+        type: String,
+        required: true,
         unique: true
     },
     age: {

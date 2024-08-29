@@ -9,7 +9,7 @@ const Consultation = require('../models/consultation.js')
 const mongoose = require('mongoose')
 const cookieParser = require('cookie-parser')
 const jwt = require('jsonwebtoken')
-const { verifyToken, verifyAssistent } = require('../middleware/auth.js')
+const { verifyToken, verifyAssistant, verifyPhone, verifyPassword, verifyConsult } = require('../middleware/auth.js')
 require('dotenv').config()
 const bcrypt = require('bcrypt')
 
@@ -19,16 +19,20 @@ router.use(cookieParser())
 
 
 
-router.post('/register', async (req, res) => {
-    const { name, email, password, phone, age } = req.body
+router.post('/register', verifyPhone, verifyPassword, async (req, res) => {
+    const { name, email, password, phone_number, age } = req.body
 
-    if (!name || !email || !password || !phone || !age) {
+    if (!name || !email || !password || !phone_number || !age) {
         return res.status(422).json({ error: 'Você não preencheu as credenciais corretamente!' })
     }
 
+    const phone_exists = await Assistant.findOne({ phone_number })
+  
+    if (phone_exists) {
+        return res.status(409).json({ error: 'Este número já existe!' })
+    }
+    
     const user = await Assistant.findOne({ email })
-    console.log(user)
-
     if (user) {
         return res.status(409).json({ error: 'Este usuário já existe!' })
     }
@@ -38,7 +42,7 @@ router.post('/register', async (req, res) => {
     }
 
     try {
-        const newUser = await new Assistant({ name, email, password, phone, age })
+        const newUser = await new Assistant({ name, email, password, phone_number, age })
         await newUser.save()
         return res.status(201).json({ message: 'Seu perfil de Assistente foi criado com sucesso!' })
     }
@@ -87,7 +91,7 @@ router.post('/login', async (req, res) => {
 
 })
 
-router.delete('/logout', verifyToken, verifyAssistent, async(req, res) => {
+router.delete('/logout', verifyToken, verifyAssistant, async (req, res) => {
     try {
         const cookie = req.cookies.cookieAuth
 
@@ -101,15 +105,21 @@ router.delete('/logout', verifyToken, verifyAssistent, async(req, res) => {
     }
 })
 
-router.post('/pacient', verifyToken, verifyAssistent, async (req, res) => {
+router.post('/pacient', verifyToken, verifyAssistant, verifyPhone, verifyPassword, async (req, res) => {
 
     try {
 
 
-        const { name, email, password, phone, age } = req.body
+        const { name, email, password, phone_number, age } = req.body
 
 
-        if (!name || !email || !password || !phone || !age) {
+        const phone_exists = await Pacient.findOne({ phone_number })
+  
+        if (phone_exists) {
+            return res.status(409).json({ error: 'Este número já existe!' })
+        }
+
+        if (!name || !email || !password || !phone_number || !age) {
             return res.status(422).json({ error: 'Você não preencheu as credenciais corretamente!' })
         }
 
@@ -119,7 +129,7 @@ router.post('/pacient', verifyToken, verifyAssistent, async (req, res) => {
             return res.status(409).json({ error: 'Já existe este paciente!' })
 
         }
-        const newPacient = await new Pacient({ name, email, password, phone, age })
+        const newPacient = await new Pacient({ name, email, password, phone_number, age })
         await newPacient.save()
         return res.status(201).json({ message: 'Paciente criado com sucesso', newPacient })
 
@@ -132,7 +142,7 @@ router.post('/pacient', verifyToken, verifyAssistent, async (req, res) => {
 
 })
 
-router.post('/doctor', verifyToken, verifyAssistent, async (req, res) => {
+router.post('/doctor', verifyToken, verifyAssistant, async (req, res) => {
     try {
         const { name, email, password, age, medical_specialty, phone_number, start_time, end_time } = req.body
         console.log({ name, email, password, age, medical_specialty, phone_number, start_time, end_time })
@@ -153,9 +163,10 @@ router.post('/doctor', verifyToken, verifyAssistent, async (req, res) => {
 
 
 
-router.post('/consultation', verifyToken, verifyAssistent, async (req, res) => {
+
+router.post('/consultation', verifyToken, verifyAssistant, verifyConsult, async (req, res) => {
     try {
-        const { doctor_id, scheduled_time, pacient_id, status } = req.body
+        const { doctor_id, scheduled_date, scheduled_time, pacient_id, status } = req.body
 
 
         // VALIDAÇÃO DE ID'S
@@ -176,11 +187,11 @@ router.post('/consultation', verifyToken, verifyAssistent, async (req, res) => {
             return res.status(422).json({ error: 'O id do paciente e/ou o do doutor não existe!' })
         }
 
-        if (!scheduled_time || !pacient_id || !status) {
+        if (!scheduled_date || !scheduled_time || !pacient_id || !status) {
             return res.status(422).json({ error: 'Você não preencheu os campos corretamente!' })
         }
 
-        const newConsultation = new Consultation({ doctor_id, scheduled_time, pacient_id, status })
+        const newConsultation = new Consultation({ doctor_id, scheduled_date, scheduled_time, pacient_id, status })
         newConsultation.save()
 
         return res.status(201).json({ message: "A consulta foi criada com sucesso!" })
@@ -192,7 +203,7 @@ router.post('/consultation', verifyToken, verifyAssistent, async (req, res) => {
 
 })
 
-router.get('/consultation', verifyToken, verifyAssistent, async (req, res) => {
+router.get('/consultation', verifyToken, verifyAssistant, async (req, res) => {
     try {
         const consultations = await Consultation.find()
         return res.status(200).json({ meessage: "Confira abaixo as consultas marcadas: ", consultations: consultations })
@@ -202,7 +213,7 @@ router.get('/consultation', verifyToken, verifyAssistent, async (req, res) => {
     }
 })
 
-router.delete('/consultation', verifyToken, verifyAssistent, async (req, res) => {
+router.delete('/consultation', verifyToken, verifyAssistant, async (req, res) => {
     try {
         const { id } = req.body
 
@@ -231,7 +242,7 @@ router.delete('/consultation', verifyToken, verifyAssistent, async (req, res) =>
 
 })
 
-router.patch('/consultation', verifyToken, verifyAssistent, async (req, res) => {
+router.patch('/consultation', verifyToken, verifyAssistant, verifyConsult, async (req, res) => {
     try {
         const { id, ...info } = req.body
 
@@ -260,7 +271,7 @@ router.patch('/consultation', verifyToken, verifyAssistent, async (req, res) => 
 
     } catch (error) {
         console.log(error)
-        res.status(500).json({error: "Ocorreu um erro interno no servidor!"})
+        res.status(500).json({ error: "Ocorreu um erro interno no servidor!" })
     }
 
 })

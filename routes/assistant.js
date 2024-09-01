@@ -9,7 +9,7 @@ const Consultation = require('../models/consultation.js')
 const mongoose = require('mongoose')
 const cookieParser = require('cookie-parser')
 const jwt = require('jsonwebtoken')
-const { verifyToken, verifyAssistant, verifyPhone, verifyPassword, verifyConsult } = require('../middleware/auth.js')
+const { verifyToken, verifyAssistant, verifyPhone, verifyPassword, verifyConsult, login } = require('../middleware/auth.js')
 require('dotenv').config()
 const bcrypt = require('bcrypt')
 
@@ -27,11 +27,11 @@ router.post('/register', verifyPhone, verifyPassword, async (req, res) => {
     }
 
     const phone_exists = await Assistant.findOne({ phone_number })
-  
+
     if (phone_exists) {
         return res.status(409).json({ error: 'Este número já existe!' })
     }
-    
+
     const user = await Assistant.findOne({ email })
     if (user) {
         return res.status(409).json({ error: 'Este usuário já existe!' })
@@ -53,32 +53,10 @@ router.post('/register', verifyPhone, verifyPassword, async (req, res) => {
 
 })
 
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body
-
-    if (!email || !password) {
-        return res.status(422).json({ error: 'Você não preencheu as credenciais corretamente!' })
-    }
-
+router.post('/login', login(Assistant, secret),  async (req, res) => {
     try {
-
-        const user = await Assistant.findOne({ email })
-        if (!user) {
-            return res.status(422).json({ error: 'Este usuário não existe!' })
-        }
-
-        bcrypt.compare(password, user.password, (err, result) => {
-            if (err) {
-                console.log(error)
-                res.status(500).json({ error: 'Ocorreu mu erro ao descriptografar sua senha!' })
-            }
-
-            if (result == 0) {
-                res.status(500).json({ error: 'Ocorreu mu erro ao descriptografar sua senha!' })
-            }
-            const token = jwt.sign({ userID: user._id, userRole: user.role }, secret, { expiresIn: '1h' })
-            return res.cookie('cookieAuth', token, { maxAge: 30 * 60 * 1000, httpOnly: true, sameSite: 'strict' }).status(201).json({ message: 'Logado com sucesso!', token: token })
-        })
+        
+        return res.status(200).json({message:"Assistente logado(a) com sucesso!"})
 
     } catch (error) {
         console.log(error)
@@ -114,7 +92,7 @@ router.post('/pacient', verifyToken, verifyAssistant, verifyPhone, verifyPasswor
 
 
         const phone_exists = await Pacient.findOne({ phone_number })
-  
+
         if (phone_exists) {
             return res.status(409).json({ error: 'Este número já existe!' })
         }

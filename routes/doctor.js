@@ -1,5 +1,5 @@
 const express = require('express')
-const { verifyToken, verifyDoctor, verifyPhone, verifyPassword } = require('../middleware/auth')
+const { verifyToken, verifyDoctor, login } = require('../middleware/auth')
 const router = express.Router()
 
 const Doctor = require('../models/doctor')
@@ -20,32 +20,11 @@ router.use(cookieParser())
 
 
 
-router.post('/login', async(req, res) => {
-    const { email, password } = req.body
-
-    if (!email || !password) {
-        return res.status(422).json({ error: 'Você não preencheu as credenciais corretamente!' })
-    }
-
-    const user = await Doctor.findOne({ email })
-    if (!user) {
-        return res.status(400).json({ error: "Este usuário não existe!" })
-    }
-
+router.post('/login', login(Doctor, secret), async (req, res) => {
     try {
-        bcrypt.compare(password, user.password, (err, result) => {
-            if (err) {
-                console.log(err)
-                return res.status(500).json({ error: 'Ocorreu mu erro ao descriptografar sua senha!' })
-            }
-
-            if (result == 0) {
-                return res.status(422).json({ error: "A senha digita está incorreta!" })
-            }
-            const token = jwt.sign({ userID: user._id, userRole: user.role }, secret, { expiresIn: '1h' })
-            return res.cookie('cookieAuth', token, { maxAge: 30 * 60 * 1000, httpOnly: true, sameSite: 'strict' }).status(201).json({ message: 'Logado com sucesso!', token: token, user: user })
-        })
-    } catch (error) {
+        return res.status(200).json({ message: "Médico lgado com sucesso!" })
+    }
+    catch (error) {
         console.log(error)
         return res.status(500).json({ message: 'Ocorreu algum erro interno no servidor' })
 
@@ -53,7 +32,7 @@ router.post('/login', async(req, res) => {
 })
 
 
-router.delete('/logout', verifyToken, verifyDoctor, async(req, res) => {
+router.delete('/logout', verifyToken, verifyDoctor, async (req, res) => {
     try {
         const cookie = req.cookies.cookieAuth
 
@@ -68,7 +47,7 @@ router.delete('/logout', verifyToken, verifyDoctor, async(req, res) => {
 })
 
 
-router.post('/report', verifyToken, verifyDoctor, async(req, res) => {
+router.post('/report', verifyToken, verifyDoctor, async (req, res) => {
     // VERIFICAR SE O ID EXSITE
     try {
         const doctor_id = req.userID
@@ -109,7 +88,7 @@ router.post('/report', verifyToken, verifyDoctor, async(req, res) => {
 })
 
 
-router.get('/report/:id', verifyToken, verifyDoctor, async(req, res) => {
+router.get('/report/:id', verifyToken, verifyDoctor, async (req, res) => {
     try {
 
         const { id } = req.params
@@ -136,9 +115,9 @@ router.get('/report/:id', verifyToken, verifyDoctor, async(req, res) => {
 })
 
 
-router.get('/consultation', verifyToken, verifyDoctor, async(req, res) => {
+router.get('/consultation', verifyToken, verifyDoctor, async (req, res) => {
     const consultations = await Consultation.find()
-    return res.status(200).json({message: "Confira as consultas abaixo:", consultations: consultations})
+    return res.status(200).json({ message: "Confira as consultas abaixo:", consultations: consultations })
 })
 
 

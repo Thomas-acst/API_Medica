@@ -1,4 +1,4 @@
-// const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
 
@@ -22,8 +22,6 @@ function verifyToken(req, res, next) {
 
         req.userID = decodedToken.userID
         req.userRole = decodedToken.userRole
-        console.log('decodedToken.userID --> ' + req.userID)
-        console.log('decodedToken.userRole --> ' + req.userRole)
         return next()
 
     })
@@ -128,6 +126,36 @@ async function verifyConsult(req, res, next) {
 }
 
 
+const login = (dbModel, secret) => {
+    return async(req, res, next) => {
+        const { email, password } = req.body
+
+        if (!email || !password) {
+            return res.status(422).json({ error: 'Você não preencheu as credenciais corretamente!' })
+        }
+
+        const user = await dbModel.findOne({ email })
+        if (!user) {
+            return res.status(422).json({ error: 'Este usuário não existe!' })
+        }
+
+        bcrypt.compare(password, user.password, (err, result) => {
+            if (err) {
+                console.log(error)
+                return res.status(500).json({ error: 'Ocorreu um erro ao descriptografar sua senha!' })
+            }
+
+            if (result == 0) {
+                return res.status(422).json({ error: 'Você digitou a senha errada!' })
+            }
+
+            const token = jwt.sign({ userID: user._id, userRole: user.role }, secret, { expiresIn: '1h' })
+            res.cookie('cookieAuth', token, { maxAge: 30 * 60 * 1000, httpOnly: true, sameSite: 'strict' })
+            return next()
+        })
+    }
+} 
 
 
-module.exports = { verifyToken, verifyAssistant, verifyDoctor, verifyPacient, verifyPhone, verifyPassword, verifyConsult }
+
+module.exports = { verifyToken, verifyAssistant, verifyDoctor, verifyPacient, verifyPhone, verifyPassword, verifyConsult, login }

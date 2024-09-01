@@ -4,10 +4,11 @@ const express = require('express')
 
 const router = express.Router()
 require('dotenv').config()
-const { verifyToken, verifyPacient, verifyPhone, verifyPassword } = require('../middleware/auth.js')
+const { verifyToken, verifyPacient, verifyPhone, verifyPassword, login } = require('../middleware/auth.js')
 
 const cookieParser = require('cookie-parser')
 const Pacient = require('../models/pacient.js')
+const Consultation = require('../models/consultation.js')
 router.use(cookieParser())
 
 const secret = process.env.JWT_TOKEN
@@ -21,13 +22,13 @@ router.post('/register', verifyPhone, verifyPassword, async (req, res) => {
         return res.status(422).json({ error: 'Você não preencheu as credenciais corretamente!' })
     }
     const user = await Pacient.findOne({ email })
-    const phone_exists = await Pacient.findOne({phone_number})
+    const phone_exists = await Pacient.findOne({ phone_number })
 
     if (user) {
         return res.status(409).json({ error: 'Este usuário já existe!' })
     }
 
-    if(phone_exists){
+    if (phone_exists) {
         return res.status(409).json({ error: 'Este número já existe!' })
     }
 
@@ -44,32 +45,12 @@ router.post('/register', verifyPhone, verifyPassword, async (req, res) => {
 
 })
 
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body
-
-    if (!email || !password) {
-        return res.status(422).json({ error: 'Você não preencheu as credenciais corretamente!' })
-    }
-
-    const user = await Pacient.findOne({ email })
-    if (!user) {
-        return res.status(409).json({ error: 'Este usuário não existe!' })
-    }
+router.post('/login', login(Pacient, secret), async (req, res) => {
 
     try {
-        bcrypt.compare(password, user.password, (err, result) => {
-            if (err) {
-                console.log(err)
-                return res.status(500).json({ error: 'Ocorreu mu erro ao descriptografar sua senha!' })
-            }
 
-            if (result == 0) {
-                return res.status(500).json({ error: 'Ocorreu mu erro ao descriptografar sua senha!' })
-            }
+        return res.status(201).json({ message: 'Logado com sucesso!' })
 
-            const token = jwt.sign({ userID: user._id, userRole: user.role }, secret, { expiresIn: '1h' })
-            return res.cookie('cookieAuth', token, { maxAge: 30 * 60 * 1000, httpOnly: true, sameSite: 'strict' }).status(201).json({ message: 'Logado com sucesso!', token: token, user:user })
-        })
     } catch (error) {
         console.log(error)
         return res.status(500).json({ message: 'Ocorreu algum erro interno no servidor' })
@@ -77,8 +58,7 @@ router.post('/login', async (req, res) => {
 })
 
 
-
-router.get('/', verifyToken, verifyPacient,  async (req, res) => {
+router.get('/', verifyToken, verifyPacient, async (req, res) => {
     const id = req.userID
     const user = await Pacient.findOne({ _id: id })
 
@@ -91,12 +71,12 @@ router.get('/', verifyToken, verifyPacient,  async (req, res) => {
 })
 
 
-router.patch('/', verifyToken, verifyPacient,  async (req, res) => {
+router.patch('/', verifyToken, verifyPacient, async (req, res) => {
     try {
-        const { id, ...info } = req.body 
+        const { id, ...info } = req.body
 
         const user = await Pacient.findOne({ _id: id })
-        
+
         if (req.userID != id) {
             console.log(req.userID)
             console.log(id)
@@ -120,6 +100,16 @@ router.patch('/', verifyToken, verifyPacient,  async (req, res) => {
 
 })
 
+router.get('/consultations', verifyToken, verifyPacient, async (req, res) => {
+    try {
+        const id = req.userID
+        consultations = await Consultation.find({pacient_id: id})
+        return res.status(200).json({ consultations: consultations })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ error: 'Ocorreu um erro interno no servidor' })
+    }
+})
 
 router.delete('/logout', verifyToken, verifyPacient, async (req, res) => {
     try {

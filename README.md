@@ -9,10 +9,8 @@ Este será um projeto pessoal para estudo de API's simulando um sistema de hospi
 - Se registrar                                              (FEITO)
 - Logar                                                     (FEITO)
 - Cadastrar pacientes                                       (FEITO)
-- Cadastrar médicos                                         (FEITO)
-  
+- Cadastrar médicos                                         (FEITO) 
 - Cadastrar/remover/alterar/visualizar consultas médicas    (FEITO) 
-- Enviar notificação de consulta ao paciente                
 - Logout                                                    (FEITO)          
 
 
@@ -20,13 +18,9 @@ Este será um projeto pessoal para estudo de API's simulando um sistema de hospi
 ## Endpoints Doctor:
 
 - Logar                                                     (FEITO)
-
 - Criar relatórios médicos                                  (FEITO)     
-
 - Visualiazar estes relatórios de pacientes (Reports)       (FEITO)
-
-- Visualizar as consultas marcadas                                      
-
+- Visualizar as consultas marcadas                          (FEITO)           
 - Logout                                                    (FEITO)
 
   
@@ -36,7 +30,7 @@ Este será um projeto pessoal para estudo de API's simulando um sistema de hospi
 - Logar                                                     (FEITO)
 - Ver suas infromações                                      (FEITO)
 - Alterar informações                                       (FEITO)                                                     
-- Visualizar todas as consultas                                                           
+- Visualizar todas as consultas                             (FEITO)                        
 - Logout                                                    (FEITO) 
 
 
